@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "db:migrate": "knex migrate:latest",
-    "db:seed": "knex seed:run"
+    "db:seed": "knex seed:run",
+    "dev": "node --watch server.js"
   },
   "keywords": [],
   "author": "",
