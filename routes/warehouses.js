@@ -16,6 +16,29 @@ router.get("/", async (_req, res) =>{
     }
 });
 
+<<<<<<< HEAD
+router.delete("/:id", async (req, res) => {
+=======
+router.delete("/:id", async (req, res) =>{
+>>>>>>> 44c231f98f458f58b9109544ef35279198fbb2cb
+    try{
+        const doesExist = await knex('warehouses').where('id', req.params.id).first();
+        if(!doesExist){
+            res.status(404).send();
+        }
+        await knex('warehouses')
+            .where('id', req.params.id)
+            .del();
+        res.status(204).send();
+    }
+    catch(error)
+    {
+        console.error(error);
+        res.status(500).send();
+
+    }
+});
+
 router.get("/:id", async (req, res) => {
     const { id } = req.params;
 
