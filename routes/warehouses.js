@@ -144,5 +144,38 @@ router.get("/:id", async (req, res) => {
     }
 });
 
+// GET /api/warehouses/:id/inventories - List of all Inventory Items for a given warehouse id
+
+router.get("/:id/inventories", async (req, res) => {
+    const { id } = req.params;
+    try{
+        // first check if warehouse exists
+        const warehouse = await knex('warehouses').where({ id }).first();
+        //if warehouse does not exist return 404
+        if (!warehouse){
+            return res.status(404).json({ message: `Warehouse with id: ${id} does not exist`})
+        }
+        
+        const inventory = await knex('inventories')
+        .select(
+            'inventories.id',
+            'inventories.item_name',
+            'inventories.category',
+            'inventories.status',
+            'inventories.quantity'
+        )
+        .where({warehouse_id : id} );
+        //return 404 is no inventory
+        if (inventory.length === 0){
+            return res.status(404).json({ message: `no inventory for given warehouse` });
+        }
+        // return inventory items for a given warehouse
+        res.status(200).json(inventory);
+
+    }catch (error) {
+        console.error(error);
+        res.status(500).json({message : `${error}`});
+    }
+});
 
 export default router;
