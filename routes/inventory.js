@@ -65,4 +65,23 @@ router.get("/:id", async (req, res) => {
     }
 });
 
+router.delete("/:id", async (req, res) => {
+    try{
+        const doesExist = await knex('inventories').where('id', req.params.id).first();
+        if(!doesExist){
+            res.status(404).send();
+        }
+        await knex('inventories')
+            .where('id', req.params.id)
+            .del();
+        res.status(204).send();
+    }
+    catch(error)
+    {
+        console.error(error);
+        res.status(500).send();
+
+    }
+});
+
 export default router;
