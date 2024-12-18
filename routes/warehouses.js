@@ -7,7 +7,7 @@ const knex = initKnex(knexfile);
 
 // Double check !!!
 
-// Helper function for validation
+// Helper function for validation, returns structure with {valid: bool, ?message:}
 const validateWarehouse = (data) => {
     const {
         warehouse_name,
@@ -66,9 +66,34 @@ router.post("/", async (req, res) => {
     }
 });
 
-// Double check !!!
+//update by id
+router.put("/:id", async(req, res) =>{
+    if(!(validateWarehouse(req.body)).valid){
+        res.status(400).json({error:"Garbage data provided"});
+        return -1;
+    }
+    try{
+        const warehouse = await knex("warehouses")
+        .where('id','=', req.params.id)
+        .update({
+            warehouse_name: `${req.body.warehouse_name}`,
+            address: `${req.body.address}`,
+            city: `${req.body.city}`,
+            country: `${req.body.country}`,
+            contact_name: `${req.body.contact_name}`,
+            contact_position: `${req.body.contact_position}`,
+            contact_phone: `${req.body.contact_phone}`,
+            contact_email: `${req.body.contact_email}`,
+        });
+        res.status(200).json(warehouse);
+    }
+    catch(error){
+        console.error(error);
+        res.status(500)
+    }
+});
 
-
+//Get all Warehouses
 router.get("/", async (_req, res) =>{
     try{
         const warehouses = await knex('warehouses');
@@ -80,6 +105,8 @@ router.get("/", async (_req, res) =>{
     }
 });
 
+
+//Delete warehouse by ID
 router.delete("/:id", async (req, res) => {
     try{
         const doesExist = await knex('warehouses').where('id', req.params.id).first();
@@ -99,6 +126,7 @@ router.delete("/:id", async (req, res) => {
     }
 });
 
+//Get warehouse by ID
 router.get("/:id", async (req, res) => {
     const { id } = req.params;
 
