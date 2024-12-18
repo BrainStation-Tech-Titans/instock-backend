@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import "dotenv/config";
 import warehouses from "./routes/warehouses.js";
+import inventory from "./routes/inventory.js";
 
 
 const app = express();
@@ -24,8 +25,10 @@ app.use((req, res, next) => {
 });
 
 
-
 app.use("/api/warehouses", warehouses);
+
+app.use("/api/inventories", inventory);
+
 
 // 404 handler for unknown endpoints
 app.use((req, res) => {
