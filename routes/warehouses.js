@@ -5,6 +5,70 @@ import knexfile from "../knexfile.js";
 
 const knex = initKnex(knexfile);
 
+// Double check !!!
+
+// Helper function for validation
+const validateWarehouse = (data) => {
+    const {
+        warehouse_name,
+        address,
+        city,
+        country,
+        contact_name,
+        contact_position,
+        contact_phone,
+        contact_email,
+    } = data;
+
+    // Check for missing fields
+    if (!warehouse_name || !address || !city || !country || !contact_name || !contact_position || !contact_phone || !contact_email) {
+        return { valid: false, message: "All fields are required." };
+    }
+
+    // Validate phone number format (basic regex for example purposes)
+    const phoneRegex = /^\+?\d{1,9}?[\s-.\(\)]*\d{1,9}[\s-.\(\)]*\d{1,9}[\s-.\(\)]*\d{1,9}$/;
+    if (!phoneRegex.test(contact_phone)) {
+        return { valid: false, message: "Invalid phone number format." };
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(contact_email)) {
+        return { valid: false, message: "Invalid email address format." };
+    }
+
+    return { valid: true };
+};
+
+// Route: POST /api/warehouses
+// Create a new warehouse
+router.post("/", async (req, res) => {
+    const warehouseData = req.body;
+
+    // Validate the request body
+    const validation = validateWarehouse(warehouseData);
+    if (!validation.valid) {
+        return res.status(400).json({ message: validation.message });
+    }
+
+    try {
+        // Insert the warehouse into the database
+        const [newWarehouseId] = await knex("warehouses").insert(warehouseData);
+
+        // Fetch the newly created warehouse
+        const newWarehouse = await knex("warehouses").where({ id: newWarehouseId }).first();
+
+        // Respond with the created warehouse details
+        res.status(201).json(newWarehouse);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "An error occurred while creating the warehouse." });
+    }
+});
+
+// Double check !!!
+
+
 router.get("/", async (_req, res) =>{
     try{
         const warehouses = await knex('warehouses');
@@ -16,11 +80,7 @@ router.get("/", async (_req, res) =>{
     }
 });
 
-<<<<<<< HEAD
 router.delete("/:id", async (req, res) => {
-=======
-router.delete("/:id", async (req, res) =>{
->>>>>>> 44c231f98f458f58b9109544ef35279198fbb2cb
     try{
         const doesExist = await knex('warehouses').where('id', req.params.id).first();
         if(!doesExist){
