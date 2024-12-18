@@ -8,10 +8,24 @@ const knex = initKnex(knexfile);
 // GET /api/inventory - List of all Inventory Items
 router.get("/", async (_req, res) => {
     try{
-        const inventories = await knex('inventories')
+        const inventory = await knex('inventories')
         .join('warehouses', 'inventories.warehouse_id', 'warehouses.id')
-        .select('inventories.id', 'warehouses.warehouse_name as warehouse_name', 'inventories.item_name', 'inventories.description', 'inventories.category', 'inventories.status', 'inventories.quantity');
-        res.status(200).json(inventories);
+        .select(
+            'inventories.id',
+            'warehouses.warehouse_name as warehouse_name',
+            'inventories.item_name',
+            'inventories.description',
+            'inventories.category',
+            'inventories.status',
+            'inventories.quantity'
+        );
+
+        // If for some reason, there are no inventory at all warehouses, return a 404
+        if (inventory.length === 0) {
+            return res.status(404).json({ message: `There seems to be no inventory at any warehouse!` });
+        }
+        // return inventory items
+        res.status(200).json(inventory);
     } catch (error) {
         console.error(error);
         res.status(500).json({message : `${error}`});
