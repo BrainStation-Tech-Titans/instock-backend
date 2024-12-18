@@ -24,7 +24,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/api/inventory", inventory);
+app.use("/api/inventories", inventory);
 app.use("/api/warehouses", warehouses);
 
 // 404 handler for unknown endpoints
