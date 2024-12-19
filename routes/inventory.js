@@ -65,4 +65,24 @@ router.get("/:id", async (req, res) => {
     }
 });
 
+//TODO: quantity NaN? & warehouse_id exists.
+router.post("/", async(req, res)=>{
+    try{
+        const response = await knex('inventories')
+        .insert({
+            warehouse_id: `${req.body.warehouse_id}`,
+            item_name: `${req.body.item_name}`,
+            description: `${req.body.description}`,
+            category: `${req.body.category}`,
+            status: `${req.body.status}`,
+            quantity: `${req.body.quantity}`,
+            created_at:`${Date.now()}`,
+            updated_at: `${Date.now()}`,
+        });
+        res.status(201).json(response);
+    }
+    catch(error){
+        res.status(400).send();
+    }
+});
 export default router;
