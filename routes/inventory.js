@@ -5,6 +5,21 @@ import knexfile from "../knexfile.js";
 
 const knex = initKnex(knexfile);
 
+// Helper function to validate inventory data
+const validateInventoryData = (data) => {
+    const { warehouse_id, item_name, description, category, status, quantity } = data;
+
+    if (!warehouse_id || !item_name || !description || !category || !status || quantity === undefined) {
+        return { valid: false, message: "All fields are required." };
+    }
+
+    if (isNaN(quantity)) {
+        return { valid: false, message: "Quantity must be a number." };
+    }
+
+    return { valid: true };
+};
+
 // GET /api/inventories - List of all Inventory Items
 router.get("/", async (_req, res) => {
     try{
@@ -89,8 +104,6 @@ router.post("/", async(req, res)=>{
         return -1;
     }
 
-
-    
     //try to add the request
     try{
         if (!req.body.item_name || !req.body.status || !req.body.description || !req.body.category) {
@@ -118,6 +131,42 @@ router.post("/", async(req, res)=>{
     catch(error){
         res.status(500).send();
         console.error(error);
+    }
+});
+
+// PUT /api/inventories/:id - Update an inventory item
+router.put("/:id", async (req, res) => {
+    const { id } = req.params;
+    const inventoryData = req.body;
+
+    // Validate inventory data
+    const validation = validateInventoryData(inventoryData);
+    if (!validation.valid) {
+        return res.status(400).json({ message: validation.message });
+    }
+
+    try {
+        // Check if the inventory ID exists
+        const inventoryItem = await knex("inventories").where({ id }).first();
+        if (!inventoryItem) {
+            return res.status(404).json({ message: `Inventory item with ID ${id} not found.` });
+        }
+
+        // Check if the warehouse_id exists
+        const warehouse = await knex("warehouses").where({ id: inventoryData.warehouse_id }).first();
+        if (!warehouse) {
+            return res.status(400).json({ message: "Invalid warehouse_id. Warehouse does not exist." });
+        }
+
+        // Update the inventory item
+        await knex("inventories").where({ id }).update(inventoryData);
+
+        // Fetch the updated inventory item
+        const updatedInventory = await knex("inventories").where({ id }).first();
+        res.status(200).json(updatedInventory);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "An error occurred while updating the inventory item." });
     }
 });
 
