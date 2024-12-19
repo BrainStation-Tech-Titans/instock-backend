@@ -65,24 +65,59 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-//TODO: quantity NaN? & warehouse_id exists.
 router.post("/", async(req, res)=>{
+    //does warehouse_id exist?
     try{
-        const response = await knex('inventories')
-        .insert({
-            warehouse_id: `${req.body.warehouse_id}`,
-            item_name: `${req.body.item_name}`,
-            description: `${req.body.description}`,
-            category: `${req.body.category}`,
-            status: `${req.body.status}`,
-            quantity: `${req.body.quantity}`,
-            created_at:`${Date.now()}`,
-            updated_at: `${Date.now()}`,
+        await knex('inventories')
+        .distinct('warehouse_id')
+        .then(rows =>{
+            const currentWarehouseIDs = rows.map(row => row.warehouse_id);
+            if(!currentWarehouseIDs.includes(req.body.warehouse_id)){
+                res.status(400).json({message:"warehouse_id does not exist"});
+            }
         });
+    }
+    catch(error){
+        res.status(500);
+        console.error("Failed to get warehouse_ids");
+        console.error(error);
+    }
+
+    //is the quantity a number?
+    if(Number.isNaN(req.body.quantity)===true){
+        res.status(400).send();
+        return -1;
+    }
+
+
+    
+    //try to add the request
+    try{
+        if (!req.body.item_name || !req.body.status || !req.body.description || !req.body.category) {
+            res.status(400).json({ error: 'Missing required fields' });
+            return -1;
+        }
+        const dataToInsert = {};
+
+        if (req.body.warehouse_id) dataToInsert.warehouse_id = req.body.warehouse_id;
+        if (req.body.item_name) dataToInsert.item_name = req.body.item_name;
+        if (req.body.description) dataToInsert.description = req.body.description;
+        if (req.body.category) dataToInsert.category = req.body.category;
+        if (req.body.status) dataToInsert.status = req.body.status;
+        if (req.body.quantity || req.body.quantity === 0) dataToInsert.quantity = req.body.quantity;
+
+        //get the new id for returning the entire new entry
+        const [insertedID] = await knex('inventories').insert(dataToInsert);
+
+        //query and return the new entry
+        const response = await knex('inventories')
+        .where('id',insertedID)
+        .first();
         res.status(201).json(response);
     }
     catch(error){
-        res.status(400).send();
+        res.status(500).send();
+        console.error(error);
     }
 });
 
